@@ -1,0 +1,17 @@
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = "https://www.mothpiercing.com.br";
+
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: [
+        '/admin/',    // Protege o seu painel de controle
+        '/checkout/', // Evita indexar páginas de finalização de compra
+      ],
+    },
+    sitemap: `${baseUrl}/sitemap.xml`,
+  };
+}

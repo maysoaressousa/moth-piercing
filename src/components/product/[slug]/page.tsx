@@ -3,6 +3,20 @@ import { prisma } from "@/lib/prisma"; // Conexão com banco
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/product/AddToCartButton";
 
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const product = await prisma.product.findUnique({ where: { slug: params.slug } });
+
+  if (!product) return { title: "Produto não encontrado" };
+
+  return {
+    title: `${product.name} | Joia em Titânio G23 | Moth Piercing`,
+    description: `Compre ${product.name} na Moth Piercing. Joalheria biocompatível de alta qualidade com estética dark. Entrega em todo o Brasil.`,
+    openGraph: {
+      images: [product.images[0]],
+    },
+  };
+}
+
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   // Busca a joia no banco de dados usando o slug da URL
   const product = await prisma.product.findUnique({
