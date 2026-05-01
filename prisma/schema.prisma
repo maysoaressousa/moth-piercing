@@ -1,0 +1,65 @@
+// Configuração do cliente e conexão
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Modelo para Categorias e Subcategorias
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique // Ex: "Orelha", "Septo", "Argolas"
+  slug      String    @unique // Ex: "orelha", "septo", "argolas"
+  section   String    // Para organizar em: "Localização" ou "Tipo de Joia"
+  products  Product[]
+}
+
+// Modelo para os Piercings de Titânio
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  price       Float
+  images      String[] // Array para múltiplas fotos (macro e no corpo)
+  
+  // Especificações Técnicas (Essenciais para Titânio G23)
+  material    String   @default("Titânio G23 (Grau Implante)")
+  gauge       String?  // Espessura (ex: 1.2mm)
+  length      String?  // Comprimento/Diâmetro (ex: 8mm)
+  threading   String?  // Tipo de rosca (ex: Interna)
+  
+  stock       Int      @default(0)
+  featured    Boolean  @default(false) // Para aparecer nos "Bestsellers" do Home
+  
+  // Relações
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Modelos para Gestão de Vendas (O "Coven")
+model Order {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  status        String      @default("PENDING") // PENDING, PAID, SHIPPED
+  total         Float
+  customerEmail String
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  productId String
+  orderId   String
+  quantity  Int
+  price     Float
+  
+  product   Product @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
+}
