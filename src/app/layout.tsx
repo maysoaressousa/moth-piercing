@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Manrope } from "next/font/google";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
 import "./globals.css";
 
 const cinzel = Cinzel({ subsets: ["latin"], variable: "--font-cinzel" });
