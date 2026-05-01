@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import CartDrawer from "../cart/CartDrawer";
+import CartDrawer from "@/components/cart/CartDrawer";
 
 export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
