@@ -1,94 +1,132 @@
+"use client";
+
+import { useState } from "react";
+import { useCart } from "@/context/CartContext";
+import { createOrder } from "@/actions/cart";
+import { useRouter } from "next/navigation";
+
 export default function CheckoutPage() {
+  const { cart, total } = useCart();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estados para capturar os dados do formulário
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    address: "",
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFinalizeRitual = async () => {
+    if (cart.length === 0) return;
+    setLoading(true);
+    setError(null);
+
+    // Preparamos os itens para o formato que a Action espera
+    const items = cart.map((item) => ({
+      id: item.id,
+      quantity: item.quantity,
+    }));
+
+    const result = await createOrder({
+      ...formData,
+      items,
+    });
+
+    if (result.success) {
+      // Redireciona para uma página de sucesso ou PIX
+      router.push(`/checkout/success?order=${result.orderId}`);
+    } else {
+      setError(result.message || "Falha no ritual.");
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-8">
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
         
-        {/* Coluna da Esquerda: Formulários */}
-        <div className="lg:col-span-7 space-y-12">
+        {/* Lado Esquerdo: Formulários */}
+        <div className="lg:col-span-7 space-y-12 text-[#e5e2e1]">
           <header>
-            <h1 className="font-headline text-4xl text-on-background uppercase tracking-tighter">O Último Ritual</h1>
-            <p className="text-secondary mt-2 font-body italic">Preencha os pergaminhos para o envio de suas joias.</p>
+            <h1 className="font-headline text-4xl uppercase tracking-tighter">O Último Ritual</h1>
+            <p className="text-secondary mt-2 font-body italic">Selle o destino das suas joias de titânio.</p>
           </header>
 
-          {/* Dados de Envio */}
           <section className="space-y-6">
-            <h2 className="font-headline text-sm text-primary uppercase tracking-widest border-b border-zinc-900 pb-2">1. Destino do Artefato</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <CheckoutInput label="Email" placeholder="alma@exemplo.com" type="email" />
-              <CheckoutInput label="Nome Completo" placeholder="Seu nome" />
-              <CheckoutInput label="CEP" placeholder="00000-000" className="md:col-span-1" />
-              <CheckoutInput label="Cidade" placeholder="Sua Cidade" className="md:col-span-1" />
-              <CheckoutInput label="Endereço" placeholder="Rua, Travessa..." className="md:col-span-2" />
+            <h2 className="font-headline text-sm text-primary uppercase tracking-widest border-b border-zinc-900 pb-2">Identificação</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="font-label text-[10px] uppercase tracking-[0.2rem] text-secondary">Seu Nome</label>
+                <input 
+                  name="name" 
+                  onChange={handleInputChange}
+                  className="bg-transparent border-b border-zinc-800 py-3 text-sm focus:border-primary transition-colors outline-none" 
+                  placeholder="Nome completo"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-label text-[10px] uppercase tracking-[0.2rem] text-secondary">E-mail</label>
+                <input 
+                  name="email" 
+                  type="email"
+                  onChange={handleInputChange}
+                  className="bg-transparent border-b border-zinc-800 py-3 text-sm focus:border-primary transition-colors outline-none" 
+                  placeholder="alma@exemplo.com"
+                />
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="font-label text-[10px] uppercase tracking-[0.2rem] text-secondary">Endereço de Entrega</label>
+                <input 
+                  name="address" 
+                  onChange={handleInputChange}
+                  className="bg-transparent border-b border-zinc-800 py-3 text-sm focus:border-primary transition-colors outline-none" 
+                  placeholder="Rua, número, Fortaleza-CE"
+                />
+              </div>
             </div>
           </section>
 
-          {/* Pagamento */}
-          <section className="space-y-6">
-            <h2 className="font-headline text-sm text-primary uppercase tracking-widest border-b border-zinc-900 pb-2">2. Oferenda (Pagamento)</h2>
-            <div className="space-y-4">
-              <label className="flex items-center gap-4 p-4 border border-zinc-800 bg-surface-container-low cursor-pointer hover:border-primary transition-colors">
-                <input type="radio" name="payment" className="accent-primary" />
-                <span className="font-label text-xs uppercase tracking-widest">Cartão de Crédito</span>
-              </label>
-              <label className="flex items-center gap-4 p-4 border border-zinc-800 bg-surface-container-low cursor-pointer hover:border-primary transition-colors">
-                <input type="radio" name="payment" className="accent-primary" />
-                <span className="font-label text-xs uppercase tracking-widest">PIX (Com 5% de desconto)</span>
-              </label>
-            </div>
-          </section>
+          {error && <p className="text-red-900 text-xs font-label uppercase tracking-widest">{error}</p>}
         </div>
 
-        {/* Coluna da Direita: Resumo do Pedido */}
+        {/* Lado Direito: Resumo e Botão */}
         <div className="lg:col-span-5">
           <aside className="sticky top-32 bg-[#0e0e0e] border border-zinc-900 p-8">
-            <h3 className="font-headline text-lg text-on-background uppercase tracking-widest mb-8">Resumo do Coven</h3>
+            <h3 className="font-headline text-lg text-[#e5e2e1] uppercase tracking-widest mb-8">Itens no Coven</h3>
             
-            <div className="space-y-6 mb-8">
-              {/* Item de exemplo */}
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col">
-                  <span className="text-sm text-on-background font-body">Argola Clicker Obsidian</span>
-                  <span className="text-[10px] text-secondary uppercase tracking-widest">Titânio G23 | 1.2mm</span>
+            <div className="space-y-6 mb-8 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              {cart.map((item) => (
+                <div key={item.id} className="flex justify-between items-center text-sm">
+                  <span className="text-secondary font-body">{item.quantity}x {item.name}</span>
+                  <span className="text-[#e5e2e1]">R$ {(item.price * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className="text-sm text-secondary">R$ 159,00</span>
-              </div>
+              ))}
             </div>
 
-            <div className="border-t border-zinc-900 pt-6 space-y-4">
-              <div className="flex justify-between text-xs font-label uppercase tracking-widest text-secondary">
-                <span>Subtotal</span>
-                <span>R$ 159,00</span>
+            <div className="border-t border-zinc-900 pt-6">
+              <div className="flex justify-between items-end mb-10">
+                <span className="font-label text-xs text-secondary uppercase tracking-widest">Total do Sacrifício</span>
+                <span className="font-headline text-2xl text-primary font-bold">R$ {total.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-xs font-label uppercase tracking-widest text-secondary">
-                <span>Frete</span>
-                <span>Calculado no envio</span>
-              </div>
-              <div className="flex justify-between pt-4 text-xl font-headline text-primary uppercase">
-                <span>Total</span>
-                <span>R$ 159,00</span>
-              </div>
-            </div>
 
-            <button className="w-full mt-10 bg-primary-container text-on-background py-5 uppercase font-label text-xs tracking-[0.3rem] hover:bg-on-primary-container transition-all">
-              Confirmar Ritual
-            </button>
+              <button 
+                onClick={handleFinalizeRitual}
+                disabled={loading || cart.length === 0}
+                className="w-full bg-[#4a0404] text-[#e5e2e1] py-5 uppercase font-label text-xs tracking-[0.3rem] hover:bg-[#ffb4aa] hover:text-[#4a0404] transition-all duration-500 disabled:opacity-30"
+              >
+                {loading ? "Processando..." : "Finalizar Ritual"}
+              </button>
+            </div>
           </aside>
         </div>
 
       </div>
     </main>
-  );
-}
-
-function CheckoutInput({ label, placeholder, type = "text", className = "" }: { label: string; placeholder: string; type?: string; className?: string }) {
-  return (
-    <div className={`flex flex-col gap-2 ${className}`}>
-      <label className="font-label text-[10px] uppercase tracking-[0.2rem] text-secondary">{label}</label>
-      <input 
-        type={type} 
-        placeholder={placeholder}
-        className="bg-transparent border-b border-zinc-800 py-3 text-sm focus:border-primary focus:ring-0 transition-colors placeholder:text-zinc-700"
-      />
-    </div>
   );
 }
